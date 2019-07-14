@@ -4,13 +4,19 @@
   // POLYFILLS
   //-------------------------------------------------------------------------
   
+  playerimage_left = new Image(560, 64);
+  playerimage_right = new Image(560, 64);
+  
+  playeranimx = 2;
+  leftkey = false;
+  
   if (!window.requestAnimationFrame) { // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
     window.requestAnimationFrame = window.webkitRequestAnimationFrame || 
                                    window.mozRequestAnimationFrame    || 
                                    window.oRequestAnimationFrame      || 
                                    window.msRequestAnimationFrame     || 
                                    function(callback, element) {
-                                     window.setTimeout(callback, 1000 / 60);
+                                     window.setTimeout(callback, 100 / 60);
                                    }
   }
 
@@ -56,7 +62,7 @@
       ACCEL    = 1/2,     // default take 1/2 second to reach maxdx (horizontal acceleration)
       FRICTION = 1/6,     // default take 1/6 second to stop from maxdx (horizontal friction)
       IMPULSE  = 1500,    // default player jump impulse
-      COLOR    = { BLACK: '#000000', YELLOW: '#ECD078', BRICK: '#D95B43', PINK: '#C02942', PURPLE: '#542437', GREY: '#333', SLATE: '#53777A', GOLD: 'gold' },
+      COLOR    = { BLACK: '#000000', YELLOW: '#ECD078', BRICK: '#D95B43', PINK: '#C02942', PURPLE: '#542437', GREY: '#333', SLATE: '#800000', GOLD: 'gold' },
       COLORS   = [ COLOR.YELLOW, COLOR.BRICK, COLOR.PINK, COLOR.PURPLE, COLOR.GREY ],
       KEY      = { SPACE: 32, LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40 };
       
@@ -83,7 +89,11 @@
 
   function onkey(ev, key, down) {
     switch(key) {
-      case KEY.LEFT:  player.left  = down; ev.preventDefault(); return false;
+      case KEY.LEFT:
+		leftkey = true;
+		player.left  = down; 
+		ev.preventDefault(); 
+		return false;
       case KEY.RIGHT: player.right = down; ev.preventDefault(); return false;
       case KEY.SPACE: player.jump  = down; ev.preventDefault(); return false;
     }
@@ -264,10 +274,23 @@
 
   function renderPlayer(ctx, dt) {
     ctx.fillStyle = COLOR.YELLOW;
-    ctx.fillRect(player.x + (player.dx * dt), player.y + (player.dy * dt), TILE, TILE);
+    // ctx.fillRect(player.x + (player.dx * dt), player.y + (player.dy * dt), TILE, TILE);
+	
+	if(player.left) {
+		ctx.drawImage(playerimage_left, playeranimx, 2, 36, 60, player.x + (player.dx * dt), player.y + (player.dy * dt) - TILE, TILE, 60);
+	}else{
+		ctx.drawImage(playerimage_right, playeranimx, 2, 36, 60, player.x + (player.dx * dt), player.y + (player.dy * dt) - TILE, TILE, 60);
+	}
 
+	if(player.left || player.right) {
+		if(playeranimx >= 520) {
+			playeranimx = 2;
+		}else {
+			playeranimx += 36 + 4;
+		}
+	}
     var n, max;
-
+	/*
     ctx.fillStyle = COLOR.GOLD;
     for(n = 0, max = player.collected ; n < max ; n++)
       ctx.fillRect(t2p(2 + n), t2p(2), TILE/2, TILE/2);
@@ -275,7 +298,10 @@
     ctx.fillStyle = COLOR.SLATE;
     for(n = 0, max = player.killed ; n < max ; n++)
       ctx.fillRect(t2p(2 + n), t2p(3), TILE/2, TILE/2);
+	 */
   }
+  
+  
 
   function renderMonsters(ctx, dt) {
     ctx.fillStyle = COLOR.SLATE;
@@ -369,7 +395,12 @@
     last = now;
     counter++;
     fpsmeter.tick();
-    requestAnimationFrame(frame, canvas);
+	playerimage_left.onload = function(){
+		//console.info(image)
+		requestAnimationFrame(frame, canvas);
+	}
+	playerimage_left.src = '/tiny/player-left.png';
+	playerimage_right.src = '/tiny/player-right.png';    
   }
   
   document.addEventListener('keydown', function(ev) { return onkey(ev, ev.keyCode, true);  }, false);
